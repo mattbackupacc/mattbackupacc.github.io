@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Random Show Picker</title>
+  <style>
+    .checkboxes {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .checkboxes input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkboxes label {
+      padding: 10px 20px;
+      background-color: #f0f0f0;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s, color 0.3s, transform 0.2s;
+      user-select: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .checkboxes input[type="checkbox"]:checked + label {
+      background-color: #0083b0;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .checkboxes label:hover {
+      background-color: #d0d0d0;
+    }
+    .cool-button {
+      background: linear-gradient(135deg, #00b4db, #0083b0);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 15px rgba(0, 131, 176, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cool-button:hover {
+      background: linear-gradient(135deg, #0083b0, #00b4db);
+      box-shadow: 0 12px 20px rgba(0, 131, 176, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .cool-button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.15);
+      transform: skewX(-25deg);
+      transition: 0.5s;
+    }
+
+    .cool-button:hover::after {
+      left: 125%;
+    }
+
+    #main {
+      text-align: center;
+      margin-top: 50px;
+      font-family: Arial, sans-serif;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .checkboxes {
+      margin-bottom: 20px;
+    }
+    label {
+      margin: 0 10px;
+    }
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00b4db, #0083b0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      animation: float 3s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+/* Optional floating animation for a light effect */
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+  </style>
+</head>
+<body>
+  <div id="main">
+    <h1>Alex's Show Randomiser</h1>
+    <div class="checkboxes">
+      <input type="checkbox" id="bd" value="BD" checked>
+      <label for="bd">Below Deck</label>
+
+      <input type="checkbox" id="b99" value="B99" checked>
+      <label for="b99">Brooklyn 99</label>
+
+      <input type="checkbox" id="dip" value="DIP" checked>
+      <label for="dip">Death in Paradise</label>
+    </div>
+    <button class="cool-button" onclick="randomise()">Pick me an episode!</button>
+
+    <h2>You should watch:</h2>
+    <div id="result"></div>
+
+    <h3>Happy watching!</h3>
+  </div>
+
+  <script>
+    async function randomise() {
+      const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                           .map(cb => cb.value);
+
+      if (checked.length === 0) {
+        document.getElementById("result").textContent = "Please select at least one show.";
+        return;
+      }
+
+      const chosenShow = checked[Math.floor(Math.random() * checked.length)];
+      const csvFile = `${chosenShow}.csv`;
+
+      try {
+        const response = await fetch(csvFile);
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+        const csvText = await response.text();
+
+        const seasons = parseCSV(csvText);
+        const randomSeason = seasons[Math.floor(Math.random() * seasons.length)];
+        const seasonNumber = randomSeason[0];
+        const episodeCount = parseInt(randomSeason[1]);
+        const episodeNumber = Math.floor(Math.random() * episodeCount) + 1;
+
+        document.getElementById("result").textContent = 
+          `Show ${chosenShow} – Season ${seasonNumber}, Episode ${episodeNumber}`;
+      } catch (err) {
+        document.getElementById("result").textContent = 
+          `Error loading ${csvFile}: ${err.message}`;
+      }
+    }
+
+    function parseCSV(csv) {
+      const lines = csv.trim().split('\n').slice(1); // skip header
+      return lines.map(line => line.split(','));
+    }
+  </script>
+</body>
+</html>
